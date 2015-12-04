@@ -28,6 +28,15 @@
 }
 
 #define TIMER_TICK_COUNTER_MAX 391U
+
+#define TIMER_OVF_MONITOR_PORT PORTA
+#define TIMER_OVF_MONITOR_DDR DDRA
+#define TIMER_OVF_MONITOR_BIT PORTA4
+
+#define TIMER_COMP_MONITOR_PORT PORTA
+#define TIMER_COMP_MONITOR_DDR DDRA
+#define TIMER_COMP_MONITOR_BIT PORTA5
+
 static uint16_t timer_tick_counter;
 static uint16_t timer_counter;
 static bool timer_stopped = false;
@@ -36,7 +45,8 @@ static bool timer_stopped = false;
 
 ISR(DIGIT_TIMER_OVF_VECT)
 {
-	PORTA &= ~_BV(PORTA4);
+	TIMER_OVF_MONITOR_PORT &= ~_BV(TIMER_OVF_MONITOR_BIT);
+	TIMER_COMP_MONITOR_PORT &= ~_BV(TIMER_COMP_MONITOR_BIT);
 	if ((keys_changed_bitmap & _BV(START_STOP_KEY)) && (~keys_bitmap & _BV(START_STOP_KEY)))
 	{
 		keys_changed_bitmap &= ~_BV(START_STOP_KEY);
@@ -55,8 +65,6 @@ ISR(DIGIT_TIMER_OVF_VECT)
 			{
 				timer_counter = 0;
 			}
-			int2bcd(timer_counter, NUM_BITS_IN_INPUT);
-			bcd2digits(0b010);
 		}
 		else
 		{
@@ -65,11 +73,12 @@ ISR(DIGIT_TIMER_OVF_VECT)
 	}
 	multiplex_next_digit();
 	handle_keys();
-	PORTA |= _BV(PORTA4);
+	TIMER_OVF_MONITOR_PORT |= _BV(TIMER_OVF_MONITOR_BIT);
 }
 
 ISR(DIGIT_TIMER_COMP_VECT)
 {
+	TIMER_COMP_MONITOR_PORT |= _BV(TIMER_COMP_MONITOR_BIT);
 	ALL_DIGITS_OFF; // switch off for the rest of the counting period
 }
 
@@ -78,14 +87,18 @@ int main(void)
 	set_sleep_mode(SLEEP_MODE_IDLE);
 	//sleep_bod_disable();
 	sleep_enable();
-	DDRA |= _BV(DDRA4);
-	PORTA &= ~_BV(DDRA4);
+	TIMER_OVF_MONITOR_DDR |= _BV(TIMER_OVF_MONITOR_BIT);
+	TIMER_OVF_MONITOR_PORT &= ~_BV(TIMER_OVF_MONITOR_BIT);
+	TIMER_COMP_MONITOR_DDR |= _BV(TIMER_COMP_MONITOR_BIT);
+	TIMER_COMP_MONITOR_PORT |= _BV(TIMER_COMP_MONITOR_BIT);
 	keys_init();
 	digits_init();
 	DIGIT_TIMER_INIT;
 	sei();
 	while (1)
 	{
+		int2bcd(timer_counter, NUM_BITS_IN_INPUT);
+		bcd2digits(0b010);
 		sleep_cpu();
 	}
 }
