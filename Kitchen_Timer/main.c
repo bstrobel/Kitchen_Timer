@@ -15,6 +15,7 @@
 #include "debounced_keys.h"
 
 
+#define NUM_BITS_IN_INPUT 10
 
 #define DIGIT_TIMER_OVF_VECT TIMER0_OVF_vect
 #define DIGIT_TIMER_COMP_VECT TIMER0_COMP_vect
@@ -54,15 +55,15 @@ ISR(DIGIT_TIMER_OVF_VECT)
 			{
 				timer_counter = 0;
 			}
-			int2bcd(timer_counter);
-			display_bcd(0b010);
+			int2bcd(timer_counter, NUM_BITS_IN_INPUT);
+			bcd2digits(0b010);
 		}
 		else
 		{
 			timer_tick_counter++;
 		}
 	}
-	handle_digit_shift();
+	multiplex_next_digit();
 	handle_keys();
 	PORTA |= _BV(PORTA4);
 }

@@ -28,7 +28,6 @@
 #endif
 
 #define NUM_DIGITS 3
-#define NUM_BITS_IN_INPUT 10
 #define DIGIT_PORT PORTA
 #define DIGIT_DDR DDRA
 #define DIGIT_1	PORTA0
@@ -49,37 +48,11 @@ extern volatile uint8_t digits[NUM_DIGITS];
 extern volatile uint8_t brightness;
 
 extern uint8_t map_seven_seg_hex(uint8_t, bool);
-extern void handle_digit_shift(void);
+extern void multiplex_next_digit(void);
 extern void digits_init(void);
+extern void int2bcd(uint16_t inp, uint8_t num_bits_in_input);
 
-/*
- * Double dabble algorithm 
- * http://www.classiccmp.org/cpmarchives/cpm/mirrors/cbfalconer.home.att.net/download/dubldabl.txt
- * Note: English Wikipedia site for this is useless!
- */
-#define int2bcd(inp) ({ \
-	uint16_t val = inp; \
-	for (uint8_t i = 0; i < NUM_DIGITS; i++) \
-	{ \
-		bcd[i] = 0; \
-	} \
-	for (uint8_t i = 0; i < NUM_BITS_IN_INPUT; i++) \
-	{ \
-		uint8_t c = val & (1 << (NUM_BITS_IN_INPUT - 1)) ? 1 : 0; \
-		val <<= 1; \
-		for (uint8_t j = 0; j < NUM_DIGITS; j++) \
-		{ \
-			bcd[j] += bcd[j] > 4 ? 3 : 0; \
-			bcd[j] <<= 1; \
-			bcd[j] += c; \
-			c = bcd[j] & 0b10000 ? 1 : 0; \
-			bcd[j] &= 0xf; \
-		} \
-	} \
-})
-
-
-#define display_bcd(dots) ({ \
+#define bcd2digits(dots) ({ \
 	uint8_t preceeding_digit_bcd = 0; \
 	for (int8_t i = NUM_DIGITS - 1; i >= 0; --i) \
 	{ \

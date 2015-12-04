@@ -56,7 +56,33 @@ uint8_t map_seven_seg_hex(uint8_t hex, bool dot)
 	}
 }
 
-void handle_digit_shift()
+/*
+ * Double dabble algorithm 
+ * http://www.classiccmp.org/cpmarchives/cpm/mirrors/cbfalconer.home.att.net/download/dubldabl.txt
+ * Note: English Wikipedia site for this is useless!
+ */
+void int2bcd(uint16_t inp, uint8_t num_bits_in_input) {
+	uint16_t val = inp; 
+	for (uint8_t i = 0; i < NUM_DIGITS; i++)
+	{
+		bcd[i] = 0;
+	}
+	for (uint8_t i = 0; i < num_bits_in_input; i++)
+	{
+		uint8_t c = val & (1 << (num_bits_in_input - 1)) ? 1 : 0;
+		val <<= 1;
+		for (uint8_t j = 0; j < NUM_DIGITS; j++)
+		{
+			bcd[j] += bcd[j] > 4 ? 3 : 0;
+			bcd[j] <<= 1;
+			bcd[j] += c;
+			c = bcd[j] & 0b10000 ? 1 : 0;
+			bcd[j] &= 0xf;
+		}
+	}
+}
+
+void multiplex_next_digit()
 {
 	DIGIT_PWM_REG = brightness;
 	ALL_DIGITS_OFF; // switch off before changing segments
