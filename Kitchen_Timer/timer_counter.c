@@ -271,40 +271,28 @@ bool adjust_timer(count_direction_t dir, adjust_steps_t step)
 		{
 			case UP:
 			{
-				/*
-				minutes+=step;
-				if (minutes > 59)
+				switch(step)
 				{
-					if (count_hours_int(UP))
-					{
-						minutes-=step;
-						return true;
-					}
-					else
-					{
-						minutes-=60;
-					}
+					case MIN_1:
+					case MIN_5:
+					case MIN_10:
+					case MIN_30:
+					case HOUR:
+					break;
 				}
-				*/
 				return false;
 			}
 			case DOWN:
 			{
-				/*
-				minutes-=step;
-				if (minutes < 0)
+				switch(step)
 				{
-					if (count_hours_int(DOWN))
-					{
-						minutes = 0;
-						return true;
-					}
-					else
-					{
-						minutes += 60;
-					}
+					case MIN_1:
+					case MIN_5:
+					case MIN_10:
+					case MIN_30:
+					case HOUR:
+					break;
 				}
-				*/
 				return false;
 			}
 		}
@@ -338,6 +326,10 @@ void put_time_in_bcd()
 		bcd[1] = seconds_ones;
 		bcd[2] = seconds_tens;
 		dots = 0b010;
+	}
+	if (tenth_seconds >= 5)
+	{
+		dots = 0; // make the dot blink
 	}
 	bcd2digits(dots);
 }
