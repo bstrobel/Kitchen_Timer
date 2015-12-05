@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include "sevenseg.h"
 #include "debounced_keys.h"
+#include "timer_counter.h"
 
 #define TIMER0_INIT { \
 	TCCR0 = _BV(CS01); /* CS01 -> -> 8007680Hz/256/8 -> 3910Hz */ \
@@ -43,8 +44,7 @@
 #define TIMER_COMP_MONITOR_BIT PORTA5
 
 static uint16_t timer_tick_counter;
-static uint16_t timer_counter;
-static bool timer_stopped = false;
+static bool timer_stopped = true;
 
 #define START_STOP_KEY 0
 
@@ -62,13 +62,9 @@ ISR(DIGIT_TIMER_OVF_VECT)
 		if (timer_tick_counter == TIMER_TICK_COUNTER_MAX)
 		{
 			timer_tick_counter = 0;
-			if (timer_counter < 999)
+			if (count_tenth_secs(UP))
 			{
-				timer_counter++;
-			}
-			else
-			{
-				timer_counter = 0;
+				timer_stopped = true;
 			}
 		}
 		else
@@ -101,14 +97,17 @@ int main(void)
 	TIMER_OVF_MONITOR_PORT &= ~_BV(TIMER_OVF_MONITOR_BIT);
 	TIMER_COMP_MONITOR_DDR |= _BV(TIMER_COMP_MONITOR_BIT);
 	TIMER_COMP_MONITOR_PORT &= ~_BV(TIMER_COMP_MONITOR_BIT);
+	
+	zero_timer();
+	//minutes_ones = 1;
+	//seconds_ones = 5;
 	keys_init();
 	digits_init();
 	DIGIT_TIMER_INIT;
 	sei();
 	while (1)
 	{
-		int2bcd(timer_counter, NUM_BITS_IN_INPUT);
-		bcd2digits(0b010);
+		put_time_in_bcd();
 		sleep_cpu();
 	}
 }
