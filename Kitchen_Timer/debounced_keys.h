@@ -19,10 +19,12 @@
 #define PORT_ID_PORTC 2
 #define PORT_ID_PORTD 3
 
-#define NUM_KEYS 1
+#define NUM_KEYS 3
 
 #define KEY_PIN_MAP { \
-	{PORT_ID_PORTB, PINB0} \
+	{PORT_ID_PORTB, PINB0}, \
+	{PORT_ID_PORTB, PINB1}, \
+	{PORT_ID_PORTB, PINB2} \
 }
 
 extern volatile uint8_t keys_bitmap;

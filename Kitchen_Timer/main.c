@@ -25,9 +25,6 @@
 }
 #define TIMER0_TICK_COUNTER_MAX 391U
 
-#define TIMER1_INIT { \
-}
-
 #define NUM_BITS_IN_INPUT 10
 
 #define DIGIT_TIMER_OVF_VECT TIMER0_OVF_vect
@@ -47,22 +44,50 @@ static uint16_t timer_tick_counter;
 static bool timer_stopped = true;
 
 #define START_STOP_KEY 0
+#define ROTARY_A START_STOP_KEY + 1
+#define ROTARY_B ROTARY_A + 1
 
 ISR(DIGIT_TIMER_OVF_VECT)
 {
 	TIMER_OVF_MONITOR_PORT &= ~_BV(TIMER_OVF_MONITOR_BIT);
 	TIMER_COMP_MONITOR_PORT &= ~_BV(TIMER_COMP_MONITOR_BIT);
+	// check for button presses
 	if ((keys_changed_bitmap & _BV(START_STOP_KEY)) && (~keys_bitmap & _BV(START_STOP_KEY)))
 	{
 		keys_changed_bitmap &= ~_BV(START_STOP_KEY);
 		timer_stopped = !timer_stopped;
+	}
+	// check for adjustment (rotary encoder)
+	if (keys_changed_bitmap & _BV(ROTARY_A))
+	{
+		timer_stopped = true;
+		keys_changed_bitmap &= ~_BV(ROTARY_A);
+		if (!(keys_bitmap & _BV(ROTARY_A))) // A changed to L
+		{
+			if (keys_bitmap & _BV(ROTARY_B)) // and B is H
+			{
+				adjust_timer(UP,MIN_1);
+			}
+		}
+	}
+	if (keys_changed_bitmap & _BV(ROTARY_B))
+	{
+		timer_stopped = true;
+		keys_changed_bitmap &= ~_BV(ROTARY_B);
+		if (!(keys_bitmap & _BV(ROTARY_B))) // B changed to L
+		{
+			if (keys_bitmap & _BV(ROTARY_A)) // and A is H
+			{
+				adjust_timer(DOWN,MIN_1);
+			}
+		}
 	}
 	if (!timer_stopped)
 	{
 		if (timer_tick_counter == TIMER_TICK_COUNTER_MAX)
 		{
 			timer_tick_counter = 0;
-			if (count_tenth_secs(UP))
+			if (count_tenth_secs(DOWN))
 			{
 				timer_stopped = true;
 			}

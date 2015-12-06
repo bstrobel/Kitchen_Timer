@@ -267,35 +267,41 @@ bool adjust_timer(count_direction_t dir, adjust_steps_t step)
 	}
 	else
 	{
-		switch(dir)
+		switch(step)
 		{
-			case UP:
+			case MIN_1:
 			{
-				switch(step)
-				{
-					case MIN_1:
-					case MIN_5:
-					case MIN_10:
-					case MIN_30:
-					case HOUR:
-					break;
-				}
-				return false;
+				return count_minutes_ones_int(dir);
 			}
-			case DOWN:
+			case MIN_5:
 			{
-				switch(step)
+				bool state = false;
+				for (uint8_t i = 0; i < 5; i++)
 				{
-					case MIN_1:
-					case MIN_5:
-					case MIN_10:
-					case MIN_30:
-					case HOUR:
-					break;
+					state = count_minutes_ones_int(dir);
 				}
-				return false;
+				return state;
+			}
+			case MIN_10:
+			{
+				bool state = false;
+				for (uint8_t i = 0; i < 10; i++)
+				{
+					state = count_minutes_ones_int(dir);
+				}
+				return state;
+			}
+			case MIN_30:
+			{
+				bool state = false;
+				for (uint8_t i = 0; i < 30; i++)
+				{
+					state = count_minutes_ones_int(dir);
+				}
+				return state;
 			}
 		}
+		return false;
 	}
 	return false;
 }
